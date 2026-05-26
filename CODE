@@ -1,5 +1,6 @@
 #include <graphics.h>
-#include <cstdio>
+#include <iostream>
+#include <sstream>
 #include <ctime>
 #include <cmath>
 #include <windows.h>
@@ -9,7 +10,7 @@
 using namespace std;
 
 // ==========================================
-// 1. L?P CON CHIM (LopChim)
+// 1. LOP CON CHIM (LopChim)
 // ==========================================
 class LopChim {
 private:
@@ -49,11 +50,9 @@ public:
         int viTriTrongChuKy = demKhungHinh % 30; 
         
         if (viTriTrongChuKy < 15) {
-           
             viTriCanh = 8; 
         } 
         else {
-           
             viTriCanh = -8; 
         }
 
@@ -92,7 +91,7 @@ public:
 };
 
 // ==========================================
-// 2. L?P B?I C?NH (LopBoiCanh)
+// 2. LOP BOI CANH (LopBoiCanh)
 // ==========================================
 struct CauTrucMay { float x, y, tocDoBanDau; int kichThuocChinh; };
 struct CauTrucToaNha { float x; int chieuRong, chieuCao, loaiMaiNha; int mauSacNha; };
@@ -100,7 +99,6 @@ struct CauTrucTru { float x, y; bool daCongDiem; };
 
 class LopBoiCanh {
 private:
-   
     int chieuRongManHinh, chieuCaoManHinh, toaDoMatDat;
     int khoangTrongGiuaHaiTru, chieuRongCuaTru, khoangCachCacTru;
     float tocDoChuyenDong;
@@ -309,7 +307,7 @@ public:
 };
 
 // ==========================================
-// 3. L?P QU?N L? GAME CHÍNH (QuanLyGame)
+// 3. LOP QUAN LY GAME CHINH (QuanLyGame)
 // ==========================================
 class QuanLyGame {
 private:
@@ -321,7 +319,6 @@ private:
     int kyLucCaNhan;
     vector<int> lichSuChoi;
     
-    // C?u trúc Sao cho n?n L?ch s?
     struct SaoDeNen { int x, y, mau; };
     vector<SaoDeNen> mangSao;
 
@@ -333,7 +330,6 @@ public:
         boDemKhungHinh = 0;
         docLichSuTuFile(); 
         
-        // Kh?i t?o n?n sao l?p lánh
         for(int i = 0; i < 150; i++) {
             SaoDeNen s;
             s.x = rand() % chieuRong;
@@ -401,7 +397,6 @@ private:
         }
     }
 
-    // FIX: Nâng c?p hàm xu?t ch?, cho phép ch?n màu tho?i mái
     void xuatChuCoVien(int x, int y, char* noiDung, int mauChu) {
         setcolor(BLACK); outtextxy(x + 2, y + 2, noiDung); 
         setcolor(mauChu); outtextxy(x, y, noiDung); 
@@ -413,7 +408,6 @@ private:
         int trangBoNho = 0;
         int thoiGianChongNhay = 0; 
         
-        // Kích thư?c B?ng (Panel)
         int bRong = 700;
         int bCao = 550;
         int bX = chieuRong / 2 - bRong / 2;
@@ -423,46 +417,38 @@ private:
             setactivepage(trangBoNho);
             cleardevice();
             
-            // 1. N?N TR?I ĐÊM Đ?Y SAO
             setfillstyle(SOLID_FILL, BLACK);
             bar(0, 0, chieuRong, chieuCao);
             for(int i = 0; i < 150; i++) {
-                // T?o hi?u ?ng l?p lánh (90% s? sao s? sáng trong 1 khung h?nh)
                 if (rand() % 10 != 0) { 
                     putpixel(mangSao[i].x, mangSao[i].y, mangSao[i].mau);
                 }
             }
 
-            // 2. V? B?NG G? B?C KIM LO?I
-            // Khung ngoài (Kim lo?i/Xám)
             setfillstyle(SOLID_FILL, LIGHTGRAY);
             bar(bX, bY, bX + bRong, bY + bCao);
             
-            // Khung vi?n 2 (G? Nâu)
             setfillstyle(SOLID_FILL, BROWN);
             bar(bX + 5, bY + 5, bX + bRong - 5, bY + bCao - 5);
             
-            // L?i B?ng (Xám đen)
             setfillstyle(SOLID_FILL, DARKGRAY);
             bar(bX + 15, bY + 15, bX + bRong - 15, bY + bCao - 15);
             
-            // ?c vít ? 4 góc b?ng
             setfillstyle(SOLID_FILL, LIGHTGRAY);
             fillellipse(bX + 25, bY + 25, 6, 6);
             fillellipse(bX + bRong - 25, bY + 25, 6, 6);
             fillellipse(bX + 25, bY + bCao - 25, 6, 6);
             fillellipse(bX + bRong - 25, bY + bCao - 25, 6, 6);
 
-            // 3. IN N?I DUNG
             settextstyle(10, 0, 5);
             xuatChuCoVien(chieuRong/2 - 220, bY + 30, (char*)"B A N G  L I C H  S U", YELLOW);
 
             settextstyle(10, 0, 4);
-            char chuoiKyLuc[50];
-            sprintf(chuoiKyLuc, "KY LUC CAO NHAT: %d DIEM", kyLucCaNhan);
-            xuatChuCoVien(chieuRong/2 - 200, bY + 100, chuoiKyLuc, LIGHTRED);
+            stringstream ssKyLuc;
+            ssKyLuc << "KY LUC CAO NHAT: " << kyLucCaNhan << " DIEM";
+            string strKyLuc = ssKyLuc.str();
+            xuatChuCoVien(chieuRong/2 - 200, bY + 100, (char*)strKyLuc.c_str(), LIGHTRED);
 
-            // Đư?ng k? ngang phân cách
             setcolor(WHITE);
             line(bX + 50, bY + 150, bX + bRong - 50, bY + 150);
 
@@ -477,20 +463,19 @@ private:
                 xuatChuCoVien(chieuRong/2 - 100, toaDoY, (char*)"Chua co du lieu!", LIGHTGRAY);
             } else {
                 for (int i = tongSoLan - 1; i >= batDau; i--) {
-                    char chuoiLichSu[50];
-                    sprintf(chuoiLichSu, "Lan %d:  %d diem", tongSoLan - i, lichSuChoi[i]);
+                    stringstream ssLichSu;
+                    ssLichSu << "Lan " << (tongSoLan - i) << ":  " << lichSuChoi[i] << " diem";
+                    string strLichSu = ssLichSu.str();
                     
-                    // Hi?u ?ng màu xen k? cho các d?ng đ? d? đ?c
                     if ((tongSoLan - i) % 2 == 0) {
-                        xuatChuCoVien(chieuRong/2 - 80, toaDoY, chuoiLichSu, LIGHTCYAN);
+                        xuatChuCoVien(chieuRong/2 - 80, toaDoY, (char*)strLichSu.c_str(), LIGHTCYAN);
                     } else {
-                        xuatChuCoVien(chieuRong/2 - 80, toaDoY, chuoiLichSu, WHITE);
+                        xuatChuCoVien(chieuRong/2 - 80, toaDoY, (char*)strLichSu.c_str(), WHITE);
                     }
                     toaDoY += 28;
                 }
             }
 
-            // D?ng hư?ng d?n nh?p nháy
             settextstyle(10, 0, 3);
             if (thoiGianChongNhay % 20 < 12) {
                 xuatChuCoVien(chieuRong/2 - 220, bY + bCao - 40, (char*)"NHAN ESC HOAC ENTER DE DONG", YELLOW);
@@ -542,10 +527,11 @@ private:
             doiTuongBoiCanh->veTatCaCacLopManHinh();
             doiTuongChim.veHinhConChim(boDemKhungHinh);
             
-            char chuoiKyLuc[50];
-            sprintf(chuoiKyLuc, "KY LUC: %d", kyLucCaNhan);
+            stringstream ssMenuKyLuc;
+            ssMenuKyLuc << "KY LUC: " << kyLucCaNhan;
+            string strMenuKyLuc = ssMenuKyLuc.str();
             settextstyle(10, 0, 5);
-            xuatChuCoVien(50, 50, chuoiKyLuc, WHITE);
+            xuatChuCoVien(50, 50, (char*)strMenuKyLuc.c_str(), WHITE);
 
             settextstyle(10, 0, 7);
             xuatChuCoVien(chieuRong / 2 - 380, chieuCao / 2 - 150, (char*)" FLAPPY BIRD ", WHITE);
@@ -587,9 +573,10 @@ private:
             doiTuongChim.veHinhConChim(boDemKhungHinh);
 
             settextstyle(10, 0, 5);
-            char chuoiHienThiDiem[50]; 
-            sprintf(chuoiHienThiDiem, "DIEM SO: %d", doiTuongBoiCanh->diemSoNguoiChoi);
-            xuatChuCoVien(50, 50, chuoiHienThiDiem, WHITE);
+            stringstream ssDiem;
+            ssDiem << "DIEM SO: " << doiTuongBoiCanh->diemSoNguoiChoi;
+            string strDiem = ssDiem.str();
+            xuatChuCoVien(50, 50, (char*)strDiem.c_str(), WHITE);
 
             if (doiTuongBoiCanh->kiemTraChimVaCham(doiTuongChim.layToaDoX(), doiTuongChim.layToaDoY(), doiTuongChim.layBanKinh())) {
                 gameDangChay = false;
@@ -617,9 +604,10 @@ private:
         xuatChuCoVien(chieuRong / 2 - 220, chieuCao / 2 - 130, (char*)"  THUA ROI!  ", LIGHTRED);
         
         settextstyle(10, 0, 5);
-        char chuoiTongDiem[50]; 
-        sprintf(chuoiTongDiem, "TONG DIEM BAN DAT DUOC: %d", doiTuongBoiCanh->diemSoNguoiChoi);
-        xuatChuCoVien(chieuRong / 2 - 300, chieuCao / 2 - 10, chuoiTongDiem, YELLOW);
+        stringstream ssTongDiem;
+        ssTongDiem << "TONG DIEM BAN DAT DUOC: " << doiTuongBoiCanh->diemSoNguoiChoi;
+        string strTongDiem = ssTongDiem.str();
+        xuatChuCoVien(chieuRong / 2 - 300, chieuCao / 2 - 10, (char*)strTongDiem.c_str(), YELLOW);
         
         settextstyle(10, 0, 3);
         xuatChuCoVien(chieuRong / 2 - 260, chieuCao / 2 + 80, (char*)"Nhan R: Choi Lai Ngay  |  ESC: Ve Menu", WHITE);
