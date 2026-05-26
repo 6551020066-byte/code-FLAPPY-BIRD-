@@ -1,0 +1,642 @@
+#include <graphics.h>
+#include <cstdio>
+#include <ctime>
+#include <cmath>
+#include <windows.h>
+#include <vector>
+#include <fstream>
+
+using namespace std;
+
+// ==========================================
+// 1. L?P CON CHIM (LopChim)
+// ==========================================
+class LopChim {
+private:
+    float toaDoX, toaDoY, vanTocHienTai;
+    float trongLuc;
+    float lucNhay;
+    int banKinhChim;
+
+public:
+    LopChim() {
+        trongLuc = 0.65f;
+        lucNhay = -10.0f;
+        banKinhChim = 18;
+    } 
+
+    void datLaiViTri(int chieuRongManHinh, int chieuCaoManHinh) {
+        toaDoX = (float)chieuRongManHinh * 0.2f;
+        toaDoY = (float)chieuCaoManHinh / 2.0f;
+        vanTocHienTai = 0;
+    }
+
+    void thucHienNhay() {
+        vanTocHienTai = lucNhay;
+    }
+
+    void capNhatHieuUngVatLy() {
+        vanTocHienTai += trongLuc;
+        toaDoY += vanTocHienTai;
+    }
+
+    void veHinhConChim(long demKhungHinh) {
+        int x = (int)toaDoX; 
+        int y = (int)toaDoY;
+        
+        int viTriCanh; 
+        
+        int viTriTrongChuKy = demKhungHinh % 30; 
+        
+        if (viTriTrongChuKy < 15) {
+           
+            viTriCanh = 8; 
+        } 
+        else {
+           
+            viTriCanh = -8; 
+        }
+
+        setfillstyle(SOLID_FILL, RED);
+        int toaDoDuoi[] = {x - 22, y, x - 50, y - 15, x - 40 ,y, x - 50, y + 15, x - 22, y};
+        fillpoly(5, toaDoDuoi);
+
+        setfillstyle(SOLID_FILL, LIGHTRED); setcolor(BLUE);
+        fillellipse(x, y, 28, 24);
+
+        setfillstyle(SOLID_FILL, WHITE); setcolor(WHITE);
+        fillellipse(x + 5, y + 10, 16, 9);
+
+        setfillstyle(SOLID_FILL, WHITE); setcolor(DARKGRAY);
+        fillellipse(x - 8, y + viTriCanh, 16, 10);
+        setcolor(BLACK);
+        line(x - 15, y + viTriCanh, x, y + viTriCanh + 2);
+
+        setfillstyle(SOLID_FILL, YELLOW); setcolor(BLACK);
+        int moTren[] = {x + 24, y - 6, x + 48, y, x + 24, y + 4};
+        fillpoly(3, moTren);
+        int moDuoi[] = {x + 24, y + 2, x + 42, y + 8, x + 24, y + 10};
+        fillpoly(3, moDuoi);
+
+        setfillstyle(SOLID_FILL, WHITE); setcolor(DARKGRAY);
+        fillellipse(x + 15, y - 10, 9, 9);
+        setfillstyle(SOLID_FILL, BLACK); setcolor(BLACK);
+        fillellipse(x + 18, y - 10, 4, 4);
+        setfillstyle(SOLID_FILL, WHITE); setcolor(WHITE);
+        fillellipse(x + 19, y - 11, 1, 1);
+    }
+
+    float layToaDoX() { return toaDoX; }
+    float layToaDoY() { return toaDoY; }
+    int layBanKinh() { return banKinhChim; }
+};
+
+// ==========================================
+// 2. L?P B?I C?NH (LopBoiCanh)
+// ==========================================
+struct CauTrucMay { float x, y, tocDoBanDau; int kichThuocChinh; };
+struct CauTrucToaNha { float x; int chieuRong, chieuCao, loaiMaiNha; int mauSacNha; };
+struct CauTrucTru { float x, y; bool daCongDiem; };
+
+class LopBoiCanh {
+private:
+   
+    int chieuRongManHinh, chieuCaoManHinh, toaDoMatDat;
+    int khoangTrongGiuaHaiTru, chieuRongCuaTru, khoangCachCacTru;
+    float tocDoChuyenDong;
+    
+    CauTrucMay mangDamMay[8];
+    CauTrucToaNha mangThanhPho[20]; 
+    CauTrucTru mangTruVatCan[5];
+
+    void veMotDamMay(int x, int y, int kichThuoc) {
+        setcolor(LIGHTGRAY); setfillstyle(SOLID_FILL, LIGHTGRAY);
+        fillellipse(x, y + 5, kichThuoc, kichThuoc / 2);
+        fillellipse(x + kichThuoc, y - kichThuoc/4 + 5, kichThuoc * 1.2, kichThuoc / 1.5);
+        fillellipse(x + kichThuoc * 2, y + 5, kichThuoc * 0.9, kichThuoc / 2);
+
+        setcolor(WHITE); setfillstyle(SOLID_FILL, WHITE);
+        fillellipse(x, y, kichThuoc, kichThuoc / 2);
+        fillellipse(x + kichThuoc, y - kichThuoc/4, kichThuoc * 1.2, kichThuoc / 1.5);
+        fillellipse(x + kichThuoc * 2, y, kichThuoc * 0.9, kichThuoc / 2);
+    }
+
+    void veMotToaNha(int x, int y_DayNha, int rong, int cao, int loaiMai, int mauNha, int chiSo) {
+        int y_DinhNha = y_DayNha - cao;
+
+        setfillstyle(SOLID_FILL, mauNha); setcolor(mauNha);
+        bar(x, y_DinhNha, x + rong, y_DayNha);
+
+        setfillstyle(SOLID_FILL, BLACK);
+        bar(x + rong - 5, y_DinhNha, x + rong, y_DayNha);
+
+        if (loaiMai == 1) { 
+            int toaDoMai[] = {x - 5, y_DinhNha, x + rong / 2, y_DinhNha - rong / 2, x + rong + 5, y_DinhNha, x - 5, y_DinhNha};
+            fillpoly(4, toaDoMai);
+        } else if (loaiMai == 2) {
+            bar(x + 10, y_DinhNha - 20, x + rong - 10, y_DinhNha);
+            bar(x + 25, y_DinhNha - 40, x + rong - 25, y_DinhNha - 20);
+        }
+
+        setfillstyle(SOLID_FILL, YELLOW);
+        for (int wy = y_DinhNha + 25; wy < y_DayNha - 20; wy += 35) {
+            for (int wx = x + 15; wx < x + rong - 20; wx += 25) {
+                int hang = wy / 35;
+                int cot = (wx - x) / 25;
+                if ((chiSo + hang + cot) % 4 != 0) { 
+                    bar(wx, wy, wx + 12, wy + 15);
+                }
+            }
+        }
+    }
+
+    void veOngNuocCoHoaVan(int xTop, int yTop, int xBot, int yBot) {
+        setcolor(BLACK);
+        setfillstyle(SOLID_FILL, GREEN); 
+        bar(xTop, yTop, xBot, yBot);
+
+        setfillstyle(SOLID_FILL, LIGHTGREEN); 
+        bar(xTop + 5, yTop, xTop + 18, yBot);
+
+        setfillstyle(SOLID_FILL, DARKGRAY); 
+        for(int viTri = yTop + 30; viTri < yBot - 20; viTri += 60) {
+            bar(xTop, viTri, xBot, viTri + 12);
+            setfillstyle(SOLID_FILL, LIGHTGRAY);
+            bar(xTop + 5, viTri, xTop + 18, viTri + 12);
+            setfillstyle(SOLID_FILL, DARKGRAY); 
+        }
+        rectangle(xTop, yTop, xBot, yBot);
+    }
+
+public:
+    int diemSoNguoiChoi;
+
+    LopBoiCanh(int rong, int cao) {
+        chieuRongManHinh = rong;
+        chieuCaoManHinh = cao;
+        toaDoMatDat = (int)(cao * 0.85);
+        khoangTrongGiuaHaiTru = (int)(cao * 0.25);
+        chieuRongCuaTru = (int)(rong * 0.065);
+        khoangCachCacTru = (int)(rong * 0.32);
+        datLaiThongSo();
+    }
+
+    void datLaiThongSo() {
+        diemSoNguoiChoi = 0;
+        tocDoChuyenDong = (float)chieuRongManHinh * 0.004f;
+
+        for (int i = 0; i < 8; i++) {
+            mangDamMay[i].x = (float)(rand() % chieuRongManHinh);
+            mangDamMay[i].y = (float)(rand() % (chieuCaoManHinh / 3) + 20);
+            mangDamMay[i].tocDoBanDau = 0.3f + (rand() % 15) / 10.0f;
+            mangDamMay[i].kichThuocChinh = 25 + rand() % 30;
+        }
+
+        int bangMauNha[2] = { DARKGRAY, LIGHTGRAY };
+        float toaDoX_HienTai = 0; 
+        for (int i = 0; i < 20; i++) {
+            mangThanhPho[i].chieuRong = 80 + rand() % 130;
+            mangThanhPho[i].chieuCao = 150 + rand() % 350;
+            mangThanhPho[i].x = toaDoX_HienTai;
+            toaDoX_HienTai += mangThanhPho[i].chieuRong; 
+            mangThanhPho[i].loaiMaiNha = rand() % 3; 
+            mangThanhPho[i].mauSacNha = bangMauNha[rand() % 2];
+        }
+
+        for (int i = 0; i < 5; i++) {
+            mangTruVatCan[i].x = (float)(chieuRongManHinh + 800 + i * khoangCachCacTru);
+            mangTruVatCan[i].y = (float)(rand() % (chieuCaoManHinh / 2) + (chieuCaoManHinh / 5));
+            mangTruVatCan[i].daCongDiem = false;
+        }
+    }
+
+    void capNhatDiChuyenBoiCanh(float viTriChimX) {
+        if (tocDoChuyenDong < chieuRongManHinh * 0.015f) tocDoChuyenDong += 0.0003f;
+
+        for (int i = 0; i < 8; i++) {
+            mangDamMay[i].x -= mangDamMay[i].tocDoBanDau;
+            if (mangDamMay[i].x < -150) {
+                mangDamMay[i].x = (float)chieuRongManHinh + 100;
+                mangDamMay[i].y = (float)(rand() % (chieuCaoManHinh / 3));
+            }
+        }
+
+        for (int i = 0; i < 20; i++) {
+            mangThanhPho[i].x -= tocDoChuyenDong * 0.25f; 
+            if (mangThanhPho[i].x + mangThanhPho[i].chieuRong < 0) {
+                float viTriPhaiXaNhat = 0;
+                for(int j = 0; j < 20; j++) {
+                    float canhPhai = mangThanhPho[j].x + mangThanhPho[j].chieuRong;
+                    if(canhPhai > viTriPhaiXaNhat) viTriPhaiXaNhat = canhPhai;
+                }
+                
+                mangThanhPho[i].x = viTriPhaiXaNhat; 
+                mangThanhPho[i].chieuRong = 80 + rand() % 130;
+                mangThanhPho[i].chieuCao = 150 + rand() % 350;
+                mangThanhPho[i].loaiMaiNha = rand() % 3;
+            }
+        }
+
+        for (int i = 0; i < 5; i++) {
+            mangTruVatCan[i].x -= tocDoChuyenDong;
+            if (mangTruVatCan[i].x + chieuRongCuaTru < viTriChimX && !mangTruVatCan[i].daCongDiem) {
+                diemSoNguoiChoi++;
+                mangTruVatCan[i].daCongDiem = true;
+            }
+
+            if (mangTruVatCan[i].x < -chieuRongCuaTru - 50) {
+                float viTriX_Max = 0;
+                for (int j = 0; j < 5; j++) {
+                    if (mangTruVatCan[j].x > viTriX_Max) viTriX_Max = mangTruVatCan[j].x;
+                }
+                mangTruVatCan[i].x = viTriX_Max + khoangCachCacTru;
+                mangTruVatCan[i].y = (float)(rand() % (chieuCaoManHinh / 2) + (chieuCaoManHinh / 5));
+                mangTruVatCan[i].daCongDiem = false;
+            }
+        }
+    }
+
+    void veTatCaCacLopManHinh() {
+        setfillstyle(SOLID_FILL, LIGHTBLUE);
+        bar(0, 0, chieuRongManHinh, toaDoMatDat);
+
+        setfillstyle(SOLID_FILL, YELLOW); setcolor(LIGHTRED);
+        fillellipse((int)(chieuRongManHinh * 0.8), (int)(chieuCaoManHinh * 0.5), 70, 70);
+
+        for (int i = 0; i < 20; i++) {
+            veMotToaNha((int)mangThanhPho[i].x, toaDoMatDat, mangThanhPho[i].chieuRong, mangThanhPho[i].chieuCao, mangThanhPho[i].loaiMaiNha, mangThanhPho[i].mauSacNha, i);
+        }
+
+        for (int i = 0; i < 8; i++) {
+            veMotDamMay((int)mangDamMay[i].x, (int)mangDamMay[i].y, mangDamMay[i].kichThuocChinh);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            int px = (int)mangTruVatCan[i].x; 
+            int py = (int)mangTruVatCan[i].y;
+            veOngNuocCoHoaVan(px, py, px + chieuRongCuaTru, toaDoMatDat);
+            veOngNuocCoHoaVan(px - 6, py, px + chieuRongCuaTru + 6, py + 45);
+            veOngNuocCoHoaVan(px, 0, px + chieuRongCuaTru, py - khoangTrongGiuaHaiTru);
+            veOngNuocCoHoaVan(px - 6, py - khoangTrongGiuaHaiTru - 45, px + chieuRongCuaTru + 6, py - khoangTrongGiuaHaiTru);
+        }
+
+        setfillstyle(SOLID_FILL, LIGHTGREEN); 
+        bar(0, toaDoMatDat, chieuRongManHinh, toaDoMatDat + 10);
+        setfillstyle(SOLID_FILL, GREEN); 
+        bar(0, toaDoMatDat + 10, chieuRongManHinh, toaDoMatDat + 25);
+        setfillstyle(SOLID_FILL, BROWN); 
+        bar(0, toaDoMatDat + 25, chieuRongManHinh, chieuCaoManHinh);
+        
+        setcolor(BLACK);
+        for(int vx = 20; vx < chieuRongManHinh; vx += 80) {
+            line(vx, toaDoMatDat + 30, vx - 15, toaDoMatDat + 60);
+            line(vx, toaDoMatDat + 30, vx + 10, toaDoMatDat + 50);
+            line(vx + 40, toaDoMatDat + 40, vx + 50, toaDoMatDat + 80);
+        }
+    }
+
+    bool kiemTraChimVaCham(float toaDoChimX, float toaDoChimY, int banKinhChim) {
+        if (toaDoChimY - banKinhChim < 0 || toaDoChimY + banKinhChim > toaDoMatDat) return true;
+        for (int i = 0; i < 5; i++) {
+            if (toaDoChimX + banKinhChim > mangTruVatCan[i].x && toaDoChimX - banKinhChim < mangTruVatCan[i].x + chieuRongCuaTru) {
+                if (toaDoChimY - banKinhChim < mangTruVatCan[i].y - khoangTrongGiuaHaiTru || toaDoChimY + banKinhChim > mangTruVatCan[i].y) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+};
+
+// ==========================================
+// 3. L?P QU?N L? GAME CHÍNH (QuanLyGame)
+// ==========================================
+class QuanLyGame {
+private:
+    int chieuRong, chieuCao;
+    LopChim doiTuongChim;
+    LopBoiCanh* doiTuongBoiCanh;
+    long boDemKhungHinh;
+
+    int kyLucCaNhan;
+    vector<int> lichSuChoi;
+    
+    // C?u trúc Sao cho n?n L?ch s?
+    struct SaoDeNen { int x, y, mau; };
+    vector<SaoDeNen> mangSao;
+
+public:
+    QuanLyGame() {
+        chieuRong = GetSystemMetrics(SM_CXSCREEN);
+        chieuCao = GetSystemMetrics(SM_CYSCREEN);
+        doiTuongBoiCanh = new LopBoiCanh(chieuRong, chieuCao);
+        boDemKhungHinh = 0;
+        docLichSuTuFile(); 
+        
+        // Kh?i t?o n?n sao l?p lánh
+        for(int i = 0; i < 150; i++) {
+            SaoDeNen s;
+            s.x = rand() % chieuRong;
+            s.y = rand() % chieuCao;
+            s.mau = (rand() % 2 == 0) ? WHITE : LIGHTGRAY;
+            mangSao.push_back(s);
+        }
+    }
+
+    void batDauTroChoi() {
+        initwindow(chieuRong, chieuCao, (char*)"Flappy Bird - Giao Dien Dep", -1, -1, false, true);
+        
+        bool quayVeMenu = true;
+
+        while (true) {
+            if (quayVeMenu) {
+                hienThiManHinhCho(); 
+            } else {
+                doiTuongChim.datLaiViTri(chieuRong, chieuCao);
+                doiTuongBoiCanh->datLaiThongSo();
+                doiTuongChim.thucHienNhay(); 
+            }
+            
+            int trangThaiGame = thucHienChayGame();
+            
+            luuLichSuVaoFile(doiTuongBoiCanh->diemSoNguoiChoi);
+            
+            if (trangThaiGame == 0) {
+                quayVeMenu = hienThiManHinhKetThuc(); 
+            } else {
+                quayVeMenu = true;
+            }
+        }
+        closegraph();
+    }
+
+private:
+    void docLichSuTuFile() {
+        kyLucCaNhan = 0;
+        lichSuChoi.clear();
+        ifstream fileLichSu("LichSuFlappy.txt");
+        if (fileLichSu.is_open()) {
+            fileLichSu >> kyLucCaNhan;
+            int diem;
+            while (fileLichSu >> diem) {
+                lichSuChoi.push_back(diem);
+            }
+            fileLichSu.close();
+        }
+    }
+
+    void luuLichSuVaoFile(int diemMoi) {
+        lichSuChoi.push_back(diemMoi);
+        if (diemMoi > kyLucCaNhan) kyLucCaNhan = diemMoi;
+
+        ofstream fileLichSu("LichSuFlappy.txt");
+        if (fileLichSu.is_open()) {
+            fileLichSu << kyLucCaNhan << "\n";
+            int tongSoLan = (int)lichSuChoi.size();
+            int batDau = (tongSoLan > 10) ? tongSoLan - 10 : 0;
+            for (int i = batDau; i < tongSoLan; i++) {
+                fileLichSu << lichSuChoi[i] << "\n";
+            }
+            fileLichSu.close();
+        }
+    }
+
+    // FIX: Nâng c?p hàm xu?t ch?, cho phép ch?n màu tho?i mái
+    void xuatChuCoVien(int x, int y, char* noiDung, int mauChu) {
+        setcolor(BLACK); outtextxy(x + 2, y + 2, noiDung); 
+        setcolor(mauChu); outtextxy(x, y, noiDung); 
+    }
+
+    void hienThiBangLichSu() {
+        while(kbhit()) getch(); 
+        
+        int trangBoNho = 0;
+        int thoiGianChongNhay = 0; 
+        
+        // Kích thư?c B?ng (Panel)
+        int bRong = 700;
+        int bCao = 550;
+        int bX = chieuRong / 2 - bRong / 2;
+        int bY = chieuCao / 2 - bCao / 2;
+
+        while (true) {
+            setactivepage(trangBoNho);
+            cleardevice();
+            
+            // 1. N?N TR?I ĐÊM Đ?Y SAO
+            setfillstyle(SOLID_FILL, BLACK);
+            bar(0, 0, chieuRong, chieuCao);
+            for(int i = 0; i < 150; i++) {
+                // T?o hi?u ?ng l?p lánh (90% s? sao s? sáng trong 1 khung h?nh)
+                if (rand() % 10 != 0) { 
+                    putpixel(mangSao[i].x, mangSao[i].y, mangSao[i].mau);
+                }
+            }
+
+            // 2. V? B?NG G? B?C KIM LO?I
+            // Khung ngoài (Kim lo?i/Xám)
+            setfillstyle(SOLID_FILL, LIGHTGRAY);
+            bar(bX, bY, bX + bRong, bY + bCao);
+            
+            // Khung vi?n 2 (G? Nâu)
+            setfillstyle(SOLID_FILL, BROWN);
+            bar(bX + 5, bY + 5, bX + bRong - 5, bY + bCao - 5);
+            
+            // L?i B?ng (Xám đen)
+            setfillstyle(SOLID_FILL, DARKGRAY);
+            bar(bX + 15, bY + 15, bX + bRong - 15, bY + bCao - 15);
+            
+            // ?c vít ? 4 góc b?ng
+            setfillstyle(SOLID_FILL, LIGHTGRAY);
+            fillellipse(bX + 25, bY + 25, 6, 6);
+            fillellipse(bX + bRong - 25, bY + 25, 6, 6);
+            fillellipse(bX + 25, bY + bCao - 25, 6, 6);
+            fillellipse(bX + bRong - 25, bY + bCao - 25, 6, 6);
+
+            // 3. IN N?I DUNG
+            settextstyle(10, 0, 5);
+            xuatChuCoVien(chieuRong/2 - 220, bY + 30, (char*)"B A N G  L I C H  S U", YELLOW);
+
+            settextstyle(10, 0, 4);
+            char chuoiKyLuc[50];
+            sprintf(chuoiKyLuc, "KY LUC CAO NHAT: %d DIEM", kyLucCaNhan);
+            xuatChuCoVien(chieuRong/2 - 200, bY + 100, chuoiKyLuc, LIGHTRED);
+
+            // Đư?ng k? ngang phân cách
+            setcolor(WHITE);
+            line(bX + 50, bY + 150, bX + bRong - 50, bY + 150);
+
+            settextstyle(10, 0, 3);
+            xuatChuCoVien(chieuRong/2 - 150, bY + 170, (char*)"10 LAN CHOI GAN NHAT:", WHITE);
+
+            int toaDoY = bY + 220;
+            int tongSoLan = (int)lichSuChoi.size();
+            int batDau = (tongSoLan > 10) ? tongSoLan - 10 : 0;
+            
+            if (tongSoLan == 0) {
+                xuatChuCoVien(chieuRong/2 - 100, toaDoY, (char*)"Chua co du lieu!", LIGHTGRAY);
+            } else {
+                for (int i = tongSoLan - 1; i >= batDau; i--) {
+                    char chuoiLichSu[50];
+                    sprintf(chuoiLichSu, "Lan %d:  %d diem", tongSoLan - i, lichSuChoi[i]);
+                    
+                    // Hi?u ?ng màu xen k? cho các d?ng đ? d? đ?c
+                    if ((tongSoLan - i) % 2 == 0) {
+                        xuatChuCoVien(chieuRong/2 - 80, toaDoY, chuoiLichSu, LIGHTCYAN);
+                    } else {
+                        xuatChuCoVien(chieuRong/2 - 80, toaDoY, chuoiLichSu, WHITE);
+                    }
+                    toaDoY += 28;
+                }
+            }
+
+            // D?ng hư?ng d?n nh?p nháy
+            settextstyle(10, 0, 3);
+            if (thoiGianChongNhay % 20 < 12) {
+                xuatChuCoVien(chieuRong/2 - 220, bY + bCao - 40, (char*)"NHAN ESC HOAC ENTER DE DONG", YELLOW);
+            }
+
+            setvisualpage(trangBoNho);
+            trangBoNho = 1 - trangBoNho;
+            delay(30);
+            
+            thoiGianChongNhay++;
+
+            if (kbhit()) {
+                char phimNhan = getch();
+                if (thoiGianChongNhay > 15) {
+                    if (phimNhan == 27 || phimNhan == 13 || phimNhan == 'h' || phimNhan == 'H') break; 
+                }
+            }
+        }
+        
+        while(kbhit()) getch(); 
+    }
+
+    void hienThiManHinhCho() {
+        int trangBoNho = 0;
+        doiTuongChim.datLaiViTri(chieuRong, chieuCao);
+        doiTuongBoiCanh->datLaiThongSo();
+        
+        while (true) {
+            if (kbhit()) {
+                char phimNhan = getch();
+                if (phimNhan == ' ') {
+                    doiTuongChim.datLaiViTri(chieuRong, chieuCao);
+                    doiTuongBoiCanh->datLaiThongSo(); 
+                    doiTuongChim.thucHienNhay();
+                    break;
+                }
+                if (phimNhan == 'h' || phimNhan == 'H') {
+                    hienThiBangLichSu();
+                    doiTuongChim.datLaiViTri(chieuRong, chieuCao);
+                    doiTuongBoiCanh->datLaiThongSo();
+                }
+                if (phimNhan == 27) exit(0); 
+            }
+
+            setactivepage(trangBoNho);
+            cleardevice();
+            
+            doiTuongBoiCanh->capNhatDiChuyenBoiCanh(doiTuongChim.layToaDoX() - 500); 
+            doiTuongBoiCanh->veTatCaCacLopManHinh();
+            doiTuongChim.veHinhConChim(boDemKhungHinh);
+            
+            char chuoiKyLuc[50];
+            sprintf(chuoiKyLuc, "KY LUC: %d", kyLucCaNhan);
+            settextstyle(10, 0, 5);
+            xuatChuCoVien(50, 50, chuoiKyLuc, WHITE);
+
+            settextstyle(10, 0, 7);
+            xuatChuCoVien(chieuRong / 2 - 380, chieuCao / 2 - 150, (char*)" FLAPPY BIRD ", WHITE);
+            
+            if(boDemKhungHinh % 30 < 15) {
+                settextstyle(10, 0, 3);
+                xuatChuCoVien(chieuRong / 2 - 380, chieuCao / 2 + 30, (char*)"SPACE: Vao Game | H: Xem Lich Su | ESC: Thoat Game", WHITE);
+            }
+
+            setvisualpage(trangBoNho);
+            trangBoNho = 1 - trangBoNho;
+            boDemKhungHinh++;
+            delay(15);
+        }
+    }
+
+    int thucHienChayGame() {
+        int trangBoNho = 0;
+        bool gameDangChay = true;
+        int trangThaiKetThuc = 0; 
+        
+        while (gameDangChay) {
+            setactivepage(trangBoNho);
+            cleardevice();
+
+            if (kbhit()) {
+                char phimNhan = getch();
+                if (phimNhan == ' ') doiTuongChim.thucHienNhay();
+                if (phimNhan == 27) {
+                    return 1; 
+                }
+            }
+
+            doiTuongChim.capNhatHieuUngVatLy();
+            doiTuongBoiCanh->capNhatDiChuyenBoiCanh(doiTuongChim.layToaDoX());
+            boDemKhungHinh++;
+
+            doiTuongBoiCanh->veTatCaCacLopManHinh();
+            doiTuongChim.veHinhConChim(boDemKhungHinh);
+
+            settextstyle(10, 0, 5);
+            char chuoiHienThiDiem[50]; 
+            sprintf(chuoiHienThiDiem, "DIEM SO: %d", doiTuongBoiCanh->diemSoNguoiChoi);
+            xuatChuCoVien(50, 50, chuoiHienThiDiem, WHITE);
+
+            if (doiTuongBoiCanh->kiemTraChimVaCham(doiTuongChim.layToaDoX(), doiTuongChim.layToaDoY(), doiTuongChim.layBanKinh())) {
+                gameDangChay = false;
+            }
+
+            setvisualpage(trangBoNho);
+            trangBoNho = 1 - trangBoNho;
+            delay(12); 
+        }
+        
+        return trangThaiKetThuc;
+    }
+
+    bool hienThiManHinhKetThuc() {
+        setactivepage(0); setvisualpage(0);
+        
+        setfillstyle(SOLID_FILL, BLACK);
+        bar(chieuRong/2 - 350, chieuCao/2 - 200, chieuRong/2 + 350, chieuCao/2 + 150);
+        
+        setcolor(RED);
+        rectangle(chieuRong/2 - 350, chieuCao/2 - 200, chieuRong/2 + 350, chieuCao/2 + 150);
+        rectangle(chieuRong/2 - 345, chieuCao/2 - 195, chieuRong/2 + 345, chieuCao/2 + 145);
+
+        settextstyle(10, 0, 7);
+        xuatChuCoVien(chieuRong / 2 - 220, chieuCao / 2 - 130, (char*)"  THUA ROI!  ", LIGHTRED);
+        
+        settextstyle(10, 0, 5);
+        char chuoiTongDiem[50]; 
+        sprintf(chuoiTongDiem, "TONG DIEM BAN DAT DUOC: %d", doiTuongBoiCanh->diemSoNguoiChoi);
+        xuatChuCoVien(chieuRong / 2 - 300, chieuCao / 2 - 10, chuoiTongDiem, YELLOW);
+        
+        settextstyle(10, 0, 3);
+        xuatChuCoVien(chieuRong / 2 - 260, chieuCao / 2 + 80, (char*)"Nhan R: Choi Lai Ngay  |  ESC: Ve Menu", WHITE);
+
+        while (true) {
+            if (kbhit()) {
+                char nutNhan = getch();
+                if (nutNhan == 'r' || nutNhan == 'R') return false; 
+                if (nutNhan == 27) return true;                   
+            }
+        }
+    }
+};
+
+int main() {
+    srand((unsigned int)time(NULL));
+    QuanLyGame troChoiCuaToi;
+    troChoiCuaToi.batDauTroChoi();
+    return 0;
+}
